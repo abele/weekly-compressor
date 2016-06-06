@@ -1,5 +1,6 @@
 import shelve
 
+import wc
 from flask import Flask, Markup, render_template_string
 
 app = Flask('weekly-compressor')
@@ -14,9 +15,15 @@ def index():
         {% endfor %}
         </ul>
     </body></html>"""
-
+    checks = [
+        wc.is_instapaper,
+        wc.is_tw_action,
+        wc.is_unsubscribe,
+    ]
     with shelve.open('wc.db') as db:
-        resp = render_template_string(tmpl, links=db['links'])
+        links = (link for link in db['links'] 
+                 if not any(check(link) for check in checks))
+        resp = render_template_string(tmpl, links=links)
 
     return resp
 
